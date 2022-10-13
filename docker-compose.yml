@@ -1,0 +1,44 @@
+version: '3'
+services: 
+    mymongodb:
+        image: mongo
+        ports:
+        - 27017:27017
+
+    postgresdb:
+        image: postgres
+        ports:
+        - 5555:5432
+        environment:
+        - POSTGRES_USER=docker_user
+        - POSTGRES_PASSWORD=1234
+        - POSTGRES_DB=twitter
+
+    tweet_collector:
+        build: tweet_collector/ 
+        volumes: 
+        - ./tweet_collector/:/app/
+        depends_on:
+        - mymongodb
+        env_file:
+        - tokens.env
+        
+    etl_pipeline:
+        build: etl_job/ 
+        volumes: 
+        - ./etl_job/:/app/
+        depends_on:
+        - mymongodb
+        - postgresdb
+        
+    slack_bot:
+        build: slack_bot/ 
+        #image: python:3.8-slim
+        volumes: 
+        - ./slack_bot/:/app/
+        depends_on:
+        - postgresdb
+        
+
+             
+  
